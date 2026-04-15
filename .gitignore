@@ -1,0 +1,8 @@
+_deps_HAL/
+_hal_classes/
+_mimics_classes/
+_java_mimics/
+_jars/
+Example_P. aeruginosa biofilm/notebook_demo_out/
+Example_P. aeruginosa biofilm/notebook_demo_ABM.xlsx
+__pycache__/

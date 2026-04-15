@@ -106,6 +106,13 @@ def run_MIMICS(ncpus, num_dt,models,media,rxns, job_num,num_met_gas,initial_gas_
 
     pool = Pool(initializer = init, processes=ncpus) ## INITIALIZE MULTIPROCESSING POOLS
 
+    ## TIMES TO SAVE METABOLITE GRIDS AND REACTION FLUXES (set MIMICS_DEMO_SHORT=1 for short runs)
+    _demo = str(os.environ.get("MIMICS_DEMO_SHORT", "")).lower() in ("1", "true", "yes")
+    if _demo:
+        times_save = list(range(int(num_dt)))
+    else:
+        times_save = [0,25,50,75,100,102,104,106,108,110,112,114,116,118,119]
+
     ## CALCULATE METABOLITE CONVERSION TERM BETWEEN ABM (mM) <--> GENRE (mmol/ gdWt hr)
     dt_rxn = dt_rxn/60; # MINUTES
     dt_rxn = dt_rxn/60; # HOURS
@@ -205,7 +212,6 @@ def run_MIMICS(ncpus, num_dt,models,media,rxns, job_num,num_met_gas,initial_gas_
             gateway.Save_cell_info(int(t), int(job_num),output_dir)
         if  t >0:
             gateway.Save_cell_info(int(t), int(job_num),output_dir)
-        times_save=[0,25,50,75,100,102,104,106,108,110,112,114,116,118,119] # DEFINE TIMES TO SAVE METABOLITE CONCENTRATIONS
         if  t in times_save:
             gateway.Save_met_info(int(t), int(job_num),output_dir)
 
@@ -217,7 +223,6 @@ def run_MIMICS(ncpus, num_dt,models,media,rxns, job_num,num_met_gas,initial_gas_
         for r,flux in zip(rxns,rxn_flux_all):
             df_rxns[r] = flux
 
-        times_save=[0,25,50,75,100,102,104,106,108,110,112,114,116,118,119] # DEFINE TIMES TO SAVE REACTION FLUXES
         rxns_flux_output_filename = output_dir+'rxns_flux' + str(job_num)+ '.csv'
         if t == 0:
             df_rxns.to_csv(rxns_flux_output_filename)
@@ -239,14 +244,14 @@ if __name__ == '__main__':
     #job_num=int(os.getenv('NUM_ARRAY')) # COMMENT OUT WHEN RUNNING ON HPC SYSTEM. JOB NUMBER VALUE DEFINED IN MIMICS HPC SLURM JOB FILE.
 
     ## SET OR IMPORT NUMBER OF MULTIPROCESSING CORES, AND INITIALIZE MULTIPROCESSING WORKERS
-    ncpus = 2
+    ncpus = int(os.environ.get("MIMICS_NCPUS", "2"))
     #ncpus=int(os.getenv('NUM_PROCS')) # COMMENT OUT WHEN RUNNING ON HPC SYSTEM. JOB NUMBER VALUE DEFINED IN MIMICS HPC SLURM JOB FILE.
 
     ## DEFINE FILENAME (XLSX) OF ABM PARAMETER VALUES
-    abm_parameters_filename = 'ABM_inputs.xlsx'
+    abm_parameters_filename = os.environ.get("MIMICS_ABM_FILE", "ABM_inputs.xlsx")
 
     ## DEFINE FILENAME (XLSX) OF NUTRIENT MEDIA
-    media_filename = 'Metabolite_inputs.xlsx'
+    media_filename = os.environ.get("MIMICS_MEDIA_FILE", "Metabolite_inputs.xlsx")
 
 ## DEFINE FILENAMES (XML) FOR METABOLIC MODELS
     model0 = "aerobic_state.xml"
@@ -261,7 +266,7 @@ if __name__ == '__main__':
     rxn_ids_filename = 'MiMICS_short_rxn_list.csv'
 
     ## DEFINE DIRECTORY FOR SIMULATION OUTPUT FILES
-    output_dir = ''
+    output_dir = os.environ.get("MIMICS_OUTPUT_DIR", "")
     ############################################# END USER INPUTS ######################################################
     print('User inputs defined')
 
