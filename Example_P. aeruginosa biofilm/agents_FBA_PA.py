@@ -104,6 +104,12 @@ def accumulateResults(result):
 ## FUNCTION TO RUN MIMICS FOR MULTIPLE SIMULATION TIME STEPS
 def run_MIMICS(ncpus, num_dt,models,media,rxns, job_num,num_met_gas,initial_gas_concentrations, D_gas, num_gas_step, num_met_carbon,initial_carbon_concentrations, D_carbon,num_carbon_step, metabolite_ids, v_patch, dt_rxn, dt_growth,initial_biomass,max_biomass,dead_state,lag_phase,output_dir):
 
+    if output_dir and str(output_dir).strip():
+        output_dir = os.path.abspath(output_dir.strip())
+        if not output_dir.endswith(os.sep):
+            output_dir = output_dir + os.sep
+        os.makedirs(output_dir, exist_ok=True)
+
     pool = Pool(initializer = init, processes=ncpus) ## INITIALIZE MULTIPROCESSING POOLS
 
     ## TIMES TO SAVE METABOLITE GRIDS AND REACTION FLUXES (set MIMICS_DEMO_SHORT=1 for short runs)
@@ -265,8 +271,12 @@ if __name__ == '__main__':
     ## DEFINE FILENAME (CSV) OF REACTION IDS TO SAVE REACTION FLUX OF EACH AGENT
     rxn_ids_filename = 'MiMICS_short_rxn_list.csv'
 
-    ## DEFINE DIRECTORY FOR SIMULATION OUTPUT FILES
+    ## DEFINE DIRECTORY FOR SIMULATION OUTPUT FILES (absolute: JVM cwd may differ from Python cwd)
     output_dir = os.environ.get("MIMICS_OUTPUT_DIR", "")
+    if output_dir.strip():
+        output_dir = os.path.abspath(output_dir.strip())
+        if not output_dir.endswith(os.sep):
+            output_dir = output_dir + os.sep
     ############################################# END USER INPUTS ######################################################
     print('User inputs defined')
 
@@ -342,6 +352,10 @@ if __name__ == '__main__':
     rxns = pd.read_csv(rxn_ids_filename)
     rxns = list(rxns.iloc[:,0])
     print('Reaction IDs imported')
+
+    ## CREATE OUTPUT DIRECTORY (Java FileWriter does not mkdir parents)
+    if output_dir and str(output_dir).strip():
+        os.makedirs(output_dir, exist_ok=True)
 
     ############################################### START MiMICS #######################################################
     ## INITIALIZE THE SIMULATION TIME RECORDER
